@@ -43,9 +43,26 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        // Database Conection
+        const userCollections = client.db("madiCare").collection("users");
+
+        //  ***************  user funtionality **************
+
+        // User add to database
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+
+            const query = { email: user.email }
+            const existingUser = await userCollections.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'user already Stored', insertedId: null })
+            }
+
+            const result = await userCollections.insertOne(user);
+            res.send(result);
+        })
 
 
-        
 
 
 
