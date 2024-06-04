@@ -153,6 +153,16 @@ async function run() {
         });
 
 
+        // Shop data find to mongoDB (Email base)
+        app.get('/shop', async (req, res) => {
+            const email = req.query.email;
+            // console.log(email);
+            const query = { email: email };
+            const result = await shopCollections.find(query).toArray();
+            res.send(result);
+        });
+
+
 
 
 
