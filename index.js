@@ -46,6 +46,7 @@ async function run() {
         // Database Conection
         const userCollections = client.db("madiCare").collection("users");
         const medicinCollections = client.db("madiCare").collection("medicin");
+        const shopCollections = client.db("madiCare").collection("shop");
 
 
         // ***************  Veryfy secure related API  ********************
@@ -104,12 +105,50 @@ async function run() {
             res.send(result);
         })
 
+        //  find of admin rool
+        app.get('/users/admin/:email', verifyToken, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+            const query = { email: email };
+            const user = await userCollections.findOne(query);
+            let admin = false;
+            if (user) {
+                admin = user?.role === 'admin';
+            }
+            res.send({ admin });
+        })
+
         // ****************  Medicin data function ********************
 
         // get all medicin data
         // get menu data from mongodeb database
         app.get('/medicin', async (req, res) => {
             const result = await medicinCollections.find().toArray();
+            res.send(result);
+        });
+
+        //  find objectID base single medicin data 
+        app.get('/medicin/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: new ObjectId(id),
+            };
+            // console.log(filter);
+            const result = await medicinCollections.findOne(filter);
+            console.log(result);
+            res.send(result);
+        })
+
+        // *******************  shop Colection Funtionality  ****************
+
+        // client side to mongoDB shop data send
+        app.post('/shop', async (req, res) => {
+            const shopData = req.body;
+            const result = await shopCollections.insertOne(shopData);
             res.send(result);
         });
 
