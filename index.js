@@ -145,6 +145,8 @@ async function run() {
 
         // *******************  shop Colection Funtionality  ****************
 
+        
+
         // client side to mongoDB shop data send
         app.post('/shop', async (req, res) => {
             const shopData = req.body;
@@ -161,6 +163,14 @@ async function run() {
             const result = await shopCollections.find(query).toArray();
             res.send(result);
         });
+
+        // delete function in shop cart data
+        app.delete('/shop/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await shopCollections.deleteOne(query);
+            res.send(result);
+        })
 
 
 
