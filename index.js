@@ -6,7 +6,7 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
-// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
 
@@ -47,6 +47,7 @@ async function run() {
         const userCollections = client.db("madiCare").collection("users");
         const medicinCollections = client.db("madiCare").collection("medicin");
         const shopCollections = client.db("madiCare").collection("shop");
+        const paymentCollection = client.db("madiCare").collection("payments");
 
 
         // ***************  Veryfy secure related API  ********************
@@ -145,7 +146,7 @@ async function run() {
 
         // *******************  shop Colection Funtionality  ****************
 
-        
+
 
         // client side to mongoDB shop data send
         app.post('/shop', async (req, res) => {
@@ -170,6 +171,56 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const result = await shopCollections.deleteOne(query);
             res.send(result);
+        })
+
+
+        // ***************     Payment section  ************** //
+
+        // creat payment intent
+        app.post("/create-payment-intent", async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+            console.log(amount, 'amount inside the intent');
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        });
+
+        // payment daat get function
+        app.get('/payments/:email', verifyToken, async (req, res) => {
+            const query = { email: req.params.email }
+            if (req.params.email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+        })
+
+
+
+        // payment insart and delete functionality
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const paymentResult = await paymentCollection.insertOne(payment);
+
+            //   delete each item from the cart
+            console.log('payment info', payment);
+            const query = {
+                _id: {
+                    $in: payment.cartIds.map(id => new ObjectId(id))
+                }
+            };
+
+            const deleteResult = await shopCollections.deleteMany(query);
+
+            res.send({ paymentResult, deleteResult });
         })
 
 
