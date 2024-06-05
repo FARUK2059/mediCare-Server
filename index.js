@@ -92,6 +92,12 @@ async function run() {
 
         //  ***************  user funtionality **************
 
+        // get All Users function
+        app.get('/users', verifyToken,  async (req, res) => {
+            const result = await userCollections.find().toArray();
+            res.send(result);
+        });
+
         // User add to database
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -194,13 +200,24 @@ async function run() {
         });
 
         // payment daat get function
-        app.get('/payments/:email', verifyToken, async (req, res) => {
-            const query = { email: req.params.email }
-            if (req.params.email !== req.decoded.email) {
-                return res.status(403).send({ message: 'forbidden access' });
-            }
-            const result = await paymentCollection.find(query).toArray();
-            res.send(result);
+        // app.get('/payments/:email', verifyToken, async (req, res) => {
+        //     const query = { email: req.params.email }
+        //     if (req.params.email !== req.decoded.email) {
+        //         return res.status(403).send({ message: 'forbidden access' });
+        //     }
+        //     const result = await paymentCollection.find(query).toArray();
+        //     // const result = await paymentCollection.findOne(query);
+        //     res.send(result);
+        // })
+
+        // find on letest payment data
+        app.get('/payment/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            // console.log(filter);
+            const result = await paymentCollection.find(filter).sort({ date: -1 }).limit(1).toArray();
+            console.log(result);
+            res.send(result.length > 0 ? result[0] : null);
         })
 
 
