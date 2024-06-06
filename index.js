@@ -93,10 +93,17 @@ async function run() {
         //  ***************  user funtionality **************
 
         // get All Users function
-        app.get('/users', verifyToken,  async (req, res) => {
+        app.get('/users', verifyToken, async (req, res) => {
             const result = await userCollections.find().toArray();
             res.send(result);
         });
+
+        // get user data for email base
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email
+            const result = await userCollections.findOne({ email })
+            res.send(result)
+        })
 
         // User add to database
         app.post('/users', async (req, res) => {
@@ -129,10 +136,24 @@ async function run() {
             res.send({ admin });
         })
 
+        // Update role
+        app.patch('/users/roles/:email', verifyToken, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const { role } = req.body; 
+            // console.log(email, role);
+
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: role },
+            };
+            const result = await userCollections.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
+
         // ****************  Medicin data function ********************
 
         // get all medicin data
-        // get menu data from mongodeb database
         app.get('/medicin', async (req, res) => {
             const result = await medicinCollections.find().toArray();
             res.send(result);
