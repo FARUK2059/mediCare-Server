@@ -139,7 +139,7 @@ async function run() {
         // Update role
         app.patch('/users/roles/:email', verifyToken, verifyAdmin, async (req, res) => {
             const email = req.params.email;
-            const { role } = req.body; 
+            const { role } = req.body;
             // console.log(email, role);
 
             const filter = { email: email };
@@ -168,6 +168,46 @@ async function run() {
             // console.log(filter);
             const result = await medicinCollections.findOne(filter);
             console.log(result);
+            res.send(result);
+        })
+
+        // add Medicin client side to mongodeb Database
+        app.post('/medicin', verifyToken, async (req, res) => {
+            const item = req.body;
+            const result = await medicinCollections.insertOne(item);
+            res.send(result);
+        });
+
+        // update one Medicin Data
+        app.patch('/medicin/:id', async (req, res) => {
+            const medi = req.body;
+            const id = req.params.id;
+            // console.log(id);
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    category_name: medi.category_name,
+                    image_url: medi.image_url,
+                    per_unit_price: medi.unitPrice,
+                    item_name: medi.itemName,
+                    company_name: medi.companyName,
+                    discount_percentage: medi.discount,
+                    item_generic_name: medi.genericName,
+                    item_mass_unit: medi.massUnit,
+                    short_description: medi.shortDescription,
+                    date: new Date()
+                }
+            }
+
+            const result = await medicinCollections.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
+        // delete function in shop cart data
+        app.delete('/medicin/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await medicinCollections.deleteOne(query);
             res.send(result);
         })
 
@@ -230,6 +270,28 @@ async function run() {
         //     // const result = await paymentCollection.findOne(query);
         //     res.send(result);
         // })
+
+
+        // get all medicin data
+        app.get('/payment', async (req, res) => {
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+        });
+
+
+        // Update user or seller payment status
+        app.patch('/payment/status/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const { status } = req.body;
+            console.log(id, status);
+
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: { status: status },
+            };
+            const result = await paymentCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
 
         // find on letest payment data
         app.get('/payment/:email', verifyToken, async (req, res) => {
