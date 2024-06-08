@@ -41,7 +41,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         // Database Conection
         const userCollections = client.db("madiCare").collection("users");
@@ -177,6 +177,16 @@ async function run() {
             const result = await medicinCollections.insertOne(item);
             res.send(result);
         });
+
+        // sellerEmail base medisin data get from mongoDB
+        app.get('/medicins', async (req, res) => {
+            const sellerEmail = req.query.sellerEmail;
+            console.log(sellerEmail);
+            const query = { sellerEmail: sellerEmail };
+            const result = await medicinCollections.find(query).toArray();
+            res.send(result);
+        });
+
 
         // update one Medicin Data
         app.patch('/medicin/:id', async (req, res) => {
@@ -329,7 +339,7 @@ async function run() {
 
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
