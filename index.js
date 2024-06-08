@@ -313,7 +313,14 @@ async function run() {
             res.send(result.length > 0 ? result[0] : null);
         })
 
-
+        // Buyer Email base medisin data get from mongoDB
+        app.get('/payments', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            const query = { email: email };
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+        });
 
         // payment insart and delete functionality
         app.post('/payments', async (req, res) => {
