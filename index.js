@@ -90,16 +90,28 @@ async function run() {
             next();
         }
 
+        // use verify admin after verifyToken
+        const verifySeller = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await userCollections.findOne(query);
+            const isSeller = user?.role === 'Seller';
+            if (!isSeller) {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
+            next();
+        }
+
         //  ***************  user funtionality **************
 
         // get All Users function
-        app.get('/users', verifyToken, async (req, res) => {
+        app.get('/users', verifyToken,  async (req, res) => {
             const result = await userCollections.find().toArray();
             res.send(result);
         });
 
         // get user data for email base
-        app.get('/user/:email', async (req, res) => {
+        app.get('/user/:email', verifyToken, async (req, res) => {
             const email = req.params.email
             const result = await userCollections.findOne({ email })
             res.send(result)
@@ -136,6 +148,7 @@ async function run() {
             res.send({ admin });
         })
 
+
         // Update role
         app.patch('/users/roles/:email', verifyToken, verifyAdmin, async (req, res) => {
             const email = req.params.email;
@@ -160,7 +173,7 @@ async function run() {
         });
 
         //  find objectID base single medicin data 
-        app.get('/medicin/:id', async (req, res) => {
+        app.get('/medicin/:id',  async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: new ObjectId(id),
@@ -172,7 +185,7 @@ async function run() {
         })
 
         // add Medicin client side to mongodeb Database
-        app.post('/medicin', verifyToken, async (req, res) => {
+        app.post('/medicin', verifyToken,   async (req, res) => {
             const item = req.body;
             const result = await medicinCollections.insertOne(item);
             res.send(result);
@@ -189,7 +202,7 @@ async function run() {
 
 
         // update one Medicin Data
-        app.patch('/medicin/:id', async (req, res) => {
+        app.patch('/medicin/:id', verifyToken, verifyAdmin,  async (req, res) => {
             const medi = req.body;
             const id = req.params.id;
             // console.log(id);
@@ -270,20 +283,8 @@ async function run() {
             })
         });
 
-        // payment daat get function
-        // app.get('/payments/:email', verifyToken, async (req, res) => {
-        //     const query = { email: req.params.email }
-        //     if (req.params.email !== req.decoded.email) {
-        //         return res.status(403).send({ message: 'forbidden access' });
-        //     }
-        //     const result = await paymentCollection.find(query).toArray();
-        //     // const result = await paymentCollection.findOne(query);
-        //     res.send(result);
-        // })
-
-
         // get all medicin data
-        app.get('/payment', async (req, res) => {
+        app.get('/payment', verifyToken, async (req, res) => {
             const result = await paymentCollection.find().toArray();
             res.send(result);
         });
@@ -313,8 +314,8 @@ async function run() {
             res.send(result.length > 0 ? result[0] : null);
         })
 
-        // Buyer Email base medisin data get from mongoDB
-        app.get('/payments', async (req, res) => {
+        // Buyer Email base medisin Payment data get from mongoDB
+        app.get('/payments', verifyToken, async (req, res) => {
             const email = req.query.email;
             console.log(email);
             const query = { email: email };
